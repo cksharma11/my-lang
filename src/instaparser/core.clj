@@ -22,16 +22,15 @@
  `(fn ~args ~body))
 
 (defn declare-function [fn-name args body]
- (swap! global-object assoc fn-name (define-fn args body)))
+	(swap! global-object assoc fn-name (eval (map read-string (list "fn" args body)))))
 
 (defn transform-tree [tree]
- (println tree)
  (let [node (first tree) s (second tree) terms (rest tree) length-expr (count terms)]
 	(case node
 	 :number (read-string s)
 	 :operator (choose-operator s)
-	 :args (mapv second terms)
-	 :function (declare-function (second s) (transform-tree (second terms)) (transform-tree (last terms)))
+	 :args (str (mapv (comp symbol second) terms))
+	 :function (declare-function (second s) (transform-tree (second terms)) (str (transform-tree (last terms))))
 	 :expr (if (= length-expr 1)
 					(transform-tree (first terms))
 					(list (transform-tree (second terms))
@@ -54,4 +53,4 @@
 	<space> = <#' '*>"))
 
 (defn parse [input]
- (->> (parser input) second transform-tree))
+  (->> (parser input) second transform-tree))
