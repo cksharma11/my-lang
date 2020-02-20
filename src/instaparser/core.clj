@@ -28,6 +28,7 @@
  (let [node (first tree) s (second tree) terms (rest tree) length-expr (count terms)]
 	(case node
 	 :number (read-string s)
+	 :identifier (symbol s)
 	 :operator (choose-operator s)
 	 :args (str (mapv (comp symbol second) terms))
 	 :function (declare-function (second s) (transform-tree (second terms)) (str (transform-tree (last terms))))
@@ -40,7 +41,7 @@
 (def parser
  (insta/parser
 	"language = function | expr
-	expr =  number | <'('> number space operator space number space <')'> | <'('> expr space operator space expr <')'>
+	expr =  number | identifier | <'('> number space operator space number space <')'> | <'('> expr space operator space expr <')'>
 	function = <'fun'> space+ identifier space+ args space+ <':'> space expr
 	identifier = #'[a-z]+[0-9]*[a-z,A-Z]*'
 	args = <'['> (identifier space+)* identifier <']'>
