@@ -35,3 +35,12 @@
 
 (defn parse-my-lang [input]
   (->> (grammer-rules input) second transform-tree))
+
+(defn repl []
+ (let [input-string (read-line)]
+	(parse-my-lang input-string)))
+
+(defn -main []
+ (loop []
+	(println (repl))
+	(recur)))
