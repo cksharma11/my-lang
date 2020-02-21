@@ -6,7 +6,9 @@
     :add 'clojure.core/+
     :sub 'clojure.core/-
     :div 'clojure.core//
-    :mul 'clojure.core/*))
+    :mul 'clojure.core/*
+    :eq 'clojure.core/=
+    :not-eq 'clojure.core/not=))
 
 (def user-namespace (create-ns 'fun-lang.user))
 
@@ -30,6 +32,9 @@
         (in-ns 'instaparser.core)
         result)))
 
+(defn condition [[pred then-block else-block]]
+  (list 'if pred then-block else-block))
+
 (defn transform-tree [tree]
   (let [node (first tree)
         s (second tree)
@@ -42,6 +47,7 @@
       :fn-call (conj (map transform-tree (rest terms)) (transform-tree s))
       :args (str (mapv (comp symbol second) terms))
       :val (save (transform-tree s) (transform-tree (last tree)))
+      :condition (condition (map transform-tree terms))
       :function (declare-function
                   (second s)
                   (transform-tree (second terms))
