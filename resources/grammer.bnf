@@ -1,6 +1,6 @@
-language ::= function | expr | val | language | fn-call
+language ::= function | expr | val | language
 	val ::= <'val'> space+ identifier space+ <':'> space+ expr
-	expr ::=  number | identifier | <'('> number space operator space number space <')'> | <'('> expr space operator space expr <')'>
+	expr ::=  number | identifier | <'('> number space operator space number space <')'> | <'('> expr space operator space expr <')'> | fn-call
 	function ::= <'fun'> space+ identifier space+ args space+ <':'> space expr
 	identifier ::= #'[a-z]+[0-9]*[a-z,A-Z]*'
 	args ::= <'['> (identifier space+)* identifier <']'>

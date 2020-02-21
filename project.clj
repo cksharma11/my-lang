@@ -5,4 +5,5 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.0"]
 								 [instaparse "1.4.10"]]
-  :repl-options {:init-ns instaparser.core})
+  :repl-options {:init-ns instaparser.core}
+  :main instaparser.core)
