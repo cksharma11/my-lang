@@ -20,43 +20,64 @@
 
 
 (defn declare-function [fn-name args body]
-  (let [fn-elements (map read-string (list "clojure.core/defn" fn-name args body))]
+  (let [fn-elements (map (comp read-string str)
+                         (list "clojure.core/defn"
+                               fn-name
+                               args
+                               body))]
     (do
       (in-ns 'fun-lang.user)
       (eval fn-elements)
       (in-ns 'instaparser.core))))
 
-(defn switch-ns-and-eval [fn-call]
-  (do (in-ns 'fun-lang.user)
-      (let [result (eval fn-call)]
-        (in-ns 'instaparser.core)
-        result)))
+(defn switch-ns-and-eval [expr-list]
+  (do
+    (in-ns 'fun-lang.user)
+    (let [result (eval expr-list)]
+      (in-ns 'instaparser.core)
+      result)))
 
 (defn condition [[pred then-block else-block]]
   (list 'if pred then-block else-block))
 
-(defn transform-tree [tree]
-  (let [node (first tree)
-        s (second tree)
-        terms (rest tree)
-        length-expr (count terms)]
-    (case node
-      :number (read-string s)
-      :identifier (symbol s)
-      :operator (choose-operator s)
-      :fn-call (conj (map transform-tree (rest terms)) (transform-tree s))
-      :args (str (mapv (comp symbol second) terms))
-      :val (save (transform-tree s) (transform-tree (last tree)))
-      :condition (condition (map transform-tree terms))
-      :function (declare-function
-                  (second s)
-                  (transform-tree (second terms))
-                  (str (transform-tree (last terms))))
-      :expr (if (= length-expr 1)
-              (transform-tree (first terms))
-              (list (transform-tree (second terms))
-                    (transform-tree (first terms))
-                    (transform-tree (last terms)))))))
+(defmulti transform-tree first)
+
+(defmethod transform-tree :number [tree]
+  (read-string (second tree)))
+
+(defmethod transform-tree :identifier [tree]
+  (symbol (second tree)))
+
+(defmethod transform-tree :operator [tree]
+  (choose-operator (second tree)))
+
+(defmethod transform-tree :fn-call [tree]
+  (conj (map transform-tree (rest (rest tree)))
+        (transform-tree (second tree))))
+
+(defmethod transform-tree :args [tree]
+  (mapv (comp symbol second) (rest tree)))
+
+(defmethod transform-tree :val [tree]
+  (save (transform-tree (second tree))
+        (transform-tree (last tree))))
+
+(defmethod transform-tree :condition [tree]
+  (condition (map transform-tree (rest tree))))
+
+(defmethod transform-tree :function [tree]
+  (declare-function
+    (transform-tree (second tree))
+    (transform-tree (second (rest tree)))
+    (transform-tree (last (rest tree)))))
+
+(defmethod transform-tree :expr [tree]
+  (let [terms (rest tree)]
+    (if (= (count terms) 1)
+      (transform-tree (first terms))
+      (list (transform-tree (second terms))
+            (transform-tree (first terms))
+            (transform-tree (last terms))))))
 
 (def grammer-rules
   (parser (clojure.java.io/resource "grammer.bnf")))
