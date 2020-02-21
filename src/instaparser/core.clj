@@ -1,7 +1,7 @@
 (ns instaparser.core
   (:require [instaparse.core :refer :all]))
 
-(def global-object (atom {}))
+;(def global-object (atom {}))
 
 (defn choose-operator [operator]
   (case (first operator)
@@ -10,14 +10,23 @@
     :div '/
     :mul '*))
 
+(def user-namespace (create-ns 'fun-lang.user))
+
 (defn save [name value]
   (do
-    (swap! global-object assoc name value)
+    (intern user-namespace name value)
+    (in-ns 'instaparser.core)
     value))
 
 (defn declare-function [fn-name args body]
   (save fn-name
         (eval (map read-string (list "fn" args body)))))
+
+(defn switch-ns-and-eval [fn-call]
+  (do (in-ns 'fun-lang.user)
+      (let [result (eval fn-call)]
+        (in-ns 'instaparser.core)
+        result)))
 
 (defn transform-tree [tree]
   (let [node (first tree)
@@ -28,10 +37,11 @@
       :number (read-string s)
       :identifier (symbol s)
       :operator (choose-operator s)
+      :fn-call (switch-ns-and-eval (conj (map transform-tree (rest terms)) (transform-tree s)))
       :args (str (mapv (comp symbol second) terms))
       :val (save (transform-tree s) (transform-tree (last tree)))
       :function (declare-function
-                  (second s)
+                  (transform-tree s)
                   (transform-tree (second terms))
                   (str (transform-tree (last terms))))
       :expr (if (= length-expr 1)

@@ -1,9 +1,10 @@
-language ::= function | expr | val | language
+language ::= function | expr | val | language | fn-call
 	val ::= <'val'> space+ identifier space+ <':'> space+ expr
 	expr ::=  number | identifier | <'('> number space operator space number space <')'> | <'('> expr space operator space expr <')'>
 	function ::= <'fun'> space+ identifier space+ args space+ <':'> space expr
 	identifier ::= #'[a-z]+[0-9]*[a-z,A-Z]*'
 	args ::= <'['> (identifier space+)* identifier <']'>
+	fn-call ::= identifier <'('> (expr <','> space)* expr <')'>
 	operator ::= add | sub | div | mul
 	add ::= <'+'>
 	sub ::= <'-'>
